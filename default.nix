@@ -560,7 +560,7 @@ in let this = rec {
       curl
       nix-prefetch-scripts
       nodejs
-      pkgconfig
+      pkg-config
       closurecompiler
       ;
   };
