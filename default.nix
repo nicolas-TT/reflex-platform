@@ -306,7 +306,10 @@ let iosSupport = system == "x86_64-darwin";
       })
     ]);
   };
-  ghcjs = if __useNewerCompiler then ghcjs8_10 else ghcjs8_6;
+  ghcjs = ghcjs9_12;
+  ghcjs9_12 = (makeRecursivelyOverridable nixpkgs.pkgsCross.ghcjs.haskell.packages.ghc912).override {
+    overrides = nixpkgs.haskell.overlays.combined;
+  };
   ghcjs8_6 = (makeRecursivelyOverridable (nixpkgsCross.ghcjs.haskell.packages.ghcjs86.override (old: {
     ghc = old.ghc.override {
       bootPkgs = old.ghc.bootPkgs // { happy = old.ghc.bootPkgs.happy_1_19_12; };
@@ -332,7 +335,10 @@ let iosSupport = system == "x86_64-darwin";
     overrides = nixpkgsCross.wasm.haskell.overlays.combined;
   });
 
-  ghc = if __useNewerCompiler then ghc8_10 else ghc8_6;
+  ghc = ghc9_12;
+  ghc9_12 = (makeRecursivelyOverridable nixpkgs.haskell.packages.ghc912).override {
+    overrides = nixpkgs.haskell.overlays.combined;
+  };
   ghcHEAD = (makeRecursivelyOverridable nixpkgs.haskell.packages.ghcHEAD).override {
     overrides = nixpkgs.haskell.overlays.combined;
   };
