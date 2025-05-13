@@ -117,9 +117,9 @@ let iosSupport = system == "x86_64-darwin";
             configureFlags = ["--enable-shared" "--enable-static"];
           });
         };
-      zlib = super.zlib.override (lib.optionalAttrs
-        (self.stdenv.hostPlatform != self.stdenv.buildPlatform)
-        { static = true; shared = true; });
+      #zlib = super.zlib.override (lib.optionalAttrs
+      #  (self.stdenv.hostPlatform != self.stdenv.buildPlatform)
+      #  { static = true; shared = true; });
       };
 
     mobileGhcOverlay = import ./nixpkgs-overlays/mobile-ghc { inherit lib; };
