@@ -167,10 +167,6 @@ let iosSupport = system == "x86_64-darwin";
             '';
           });
 
-          libiconv = super.libiconv.overrideAttrs (old: lib.optionalAttrs (self.stdenv.hostPlatform.useAndroidPrebuilt or false) {
-            configureFlags = [ "--disable-shared" "--enable-static" ];
-          });
-
           libffi = if (self.stdenv.hostPlatform.useAndroidPrebuilt or false) then super.libffi_3_3 else super.libffi;
         })
       ] ++ nixpkgsOverlays;
