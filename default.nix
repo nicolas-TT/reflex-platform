@@ -552,7 +552,6 @@ in let this = rec {
       cabal-install
       ghcid
       hasktags
-      stylish-haskell # Recent stylish-haskell only builds with AMP in place
       ;
     inherit (nixpkgs)
       cabal2nix
