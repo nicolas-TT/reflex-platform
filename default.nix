@@ -139,9 +139,9 @@ let iosSupport = system == "x86_64-darwin";
             then super.buildPackages.runtimeShellPackage
             else super.runtimeShellPackage;
 
-          polkit = super.polkit.override {
-            gobject-introspection = super.gobject-introspection-unwrapped;
-          };
+          #polkit = super.polkit.override {
+          #  gobject-introspection = super.gobject-introspection-unwrapped;
+          #};
 
           darwin = super.darwin.overrideScope (dself: dsuper: {
             ios-deploy = dsuper.ios-deploy.overrideAttrs (_: {
