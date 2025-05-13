@@ -127,7 +127,6 @@ let iosSupport = system == "x86_64-darwin";
     nixpkgsArgs = {
       inherit system;
       overlays = [
-        (import ./nixpkgs-overlays/ghc.nix { inherit lib; })
         hackGetOverlay
         bindHaskellOverlays
         forceStaticLibs
