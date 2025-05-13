@@ -548,6 +548,7 @@ in let this = rec {
   # Tools that are useful for development under both ghc and ghcjs
   generalDevTools' = { nativeHaskellPackages ? ghc }: {
     inherit (nativeHaskellPackages)
+      haskell-language-server
       Cabal
       cabal-install
       ghcid
