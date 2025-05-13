@@ -553,7 +553,6 @@ in let this = rec {
       ghcid
       hasktags
       stylish-haskell # Recent stylish-haskell only builds with AMP in place
-      reflex-ghci
       ;
     inherit (nixpkgs)
       cabal2nix
