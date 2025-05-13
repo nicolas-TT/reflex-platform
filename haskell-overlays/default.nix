@@ -47,7 +47,6 @@ rec {
 
     reflexPackages
     profiling
-    untriaged
 
     (optionalExtension enableExposeAllUnfoldings exposeAllUnfoldings)
 
