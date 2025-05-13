@@ -118,8 +118,6 @@ rec {
 
   combined-ghc = self: super: foldExtensions [
     (self: super: {
-      hoogle = self.callHackage "hoogle" "5.0.18.3" {};
-      hpack = self.callHackage "hpack" "0.34.5" {};
     })
     (optionalExtension (versionWildcard [ 8 6 ] super.ghc.version) ghc-8_6)
     (optionalExtension (lib.versionOlder "8.11" super.ghc.version) ghc-head)
