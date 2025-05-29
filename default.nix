@@ -550,11 +550,11 @@ in let this = rec {
     inherit (nativeHaskellPackages)
       haskell-language-server
       Cabal
-      cabal-install
-      ghcid
       hasktags
       ;
     inherit (nixpkgs)
+      cabal-install
+      ghcid
       cabal2nix
       curl
       nix-prefetch-scripts
