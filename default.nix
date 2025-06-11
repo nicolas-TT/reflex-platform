@@ -247,9 +247,8 @@ let iosSupport = system == "x86_64-darwin";
       ghcjs = nixpkgsFunc (nixpkgsArgs // {
         crossSystem = lib.systems.examples.ghcjs;
       });
-      wasm = nixpkgsFunc (nixpkgsArgs //
-        (import wasmCross { inherit nixpkgsFunc; }).nixpkgsCrossArgs webGhcSrc "8.6.5"
-      );
+      wasm = (import ./nix-wasm).legacyPackages.${nixpkgs.system};
+      
     };
 
     haskellLib = nixpkgs.haskell.lib;
@@ -320,13 +319,10 @@ let iosSupport = system == "x86_64-darwin";
     overrides = nixpkgsCross.ghcjs.haskell.overlays.combined;
   };
 
-  wasm = ghcWasm32-8_10;
-  ghcWasm32-8_10 = makeRecursivelyOverridableBHPToo ((makeRecursivelyOverridable (nixpkgsCross.wasm.haskell.packages.ghcWasm.override (old: {
-    # Due to the splices changes the parallel build fails while building the libraries
-    ghc = old.ghc.overrideAttrs (drv: { enableParallelBuilding = false; });
-  }))).override {
-    overrides = nixpkgsCross.wasm.haskell.overlays.combined;
-  });
+  ghcwasm = ghcwasm9_12;
+  ghcwasm9_12 = (makeRecursivelyOverridable nixpkgsCross.wasm.haskellPackages).override {
+    overrides = nixpkgs.haskell.overlays.combined;
+  };
 
   ghc = ghc9_12;
   ghc9_12 = (makeRecursivelyOverridable nixpkgs.haskell.packages.ghc912).override {
@@ -462,8 +458,7 @@ in let this = rec {
           iosAarch64
           iosSimulator
           iosWithHaskellPackages
-          wasm
-          wasmCross
+          ghcwasm
           ;
 
   # Back compat
@@ -537,6 +532,7 @@ in let this = rec {
   platforms = [
     "ghcjs"
     "ghc"
+    "ghcwasm"
   ];
 
   androidDevTools = [
@@ -575,7 +571,7 @@ in let this = rec {
     pkgPath : # Path of cabal package
     args: # Others options to pass to build-wasm-app
   let
-    pkg = wasm.callPackage pkgPath {};
+    pkg = ghcwasm.callPackage pkgPath {};
     webabi = nixpkgs.callPackage (wasmCross + /webabi) {};
     build-wasm-app = nixpkgs.callPackage (wasmCross + /build-wasm-app.nix) ({ inherit webabi; } // args);
   in build-wasm-app {

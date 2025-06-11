@@ -93,7 +93,7 @@ rec {
 
     (optionalExtension (nixpkgs.stdenv.hostPlatform.useAndroidPrebuilt or false) android)
     (optionalExtension (nixpkgs.stdenv.hostPlatform.isiOS or false) ios)
-    (optionalExtension (nixpkgs.stdenv.hostPlatform.isWasm or false) wasm)
+    (optionalExtension (super.ghc.targetPrefix == "wasm32-wasi-") wasm)
 
     user-custom-post
   ]
@@ -262,7 +262,7 @@ rec {
     inherit nixpkgs;
   };
 
-  wasm = import ./wasm;
+  wasm = import ./wasm { inherit haskellLib; };
 
   user-custom-pre = foldExtensions haskellOverlaysPre;
   user-custom-post = foldExtensions haskellOverlaysPost;

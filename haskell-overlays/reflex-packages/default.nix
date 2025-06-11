@@ -12,9 +12,10 @@ self: super:
 let
   reflexOptimizerFlag = lib.optional (useReflexOptimizer && (self.ghc.cross or null) == null) "-fuse-reflex-optimizer";
   useTemplateHaskellFlag = lib.optional (!__useTemplateHaskell) "-f-use-template-haskell";
+  useWarp = (super.reflex-dom.stdenv.targetPlatform.isLinux or false) && !nixpkgs.stdenv.hostPlatform.useAndroidPrebuilt;
   useWebkit2GtkFlag = if useWebkit2Gtk
     then ["-fwebkit2gtk"]
-    else ["-f-webkit2gtk"] ++ lib.optional ((nixpkgs.stdenv.hostPlatform.isLinux or false) && !nixpkgs.stdenv.hostPlatform.useAndroidPrebuilt) "-fuse-warp"; # Enable warp on linux if webkit2gtk is disabled. Other platforms have other default runners
+    else ["-f-webkit2gtk"] ++ lib.optional useWarp "-fuse-warp"; # Enable warp on linux if webkit2gtk is disabled. Other platforms have other default runners
 
 in
 {
@@ -97,7 +98,8 @@ in
 
   reflex-dom = lib.pipe super.reflex-dom [
     (appendConfigureFlags [reflexOptimizerFlag useTemplateHaskellFlag useWebkit2GtkFlag])
-    (if useWebkit2Gtk then lib.id else addBuildDepends [self.jsaddle-warp])
+    (if useWarp then addBuildDepends [self.jsaddle-warp] else lib.id)
+    (addBuildDepends [self.jsaddle-wasm])
     (x: x.override {
       jsaddle-webkit2gtk = if useWebkit2Gtk
         then self.jsaddle-webkit2gtk
