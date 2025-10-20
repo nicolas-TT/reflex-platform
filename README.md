@@ -31,7 +31,7 @@ Important Notes
 
 ### Interface documentation
 
-All of the interface documentation lives in [docs](./docs)
+All of the interface documentation lives in [./doc](./doc)
 
 
 ### Branches
