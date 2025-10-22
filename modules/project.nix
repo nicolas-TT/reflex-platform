@@ -97,12 +97,11 @@ pkgs.lib.makeExtensible (self: let
     inputMap = inputMapDriver.inputMap // inputMap;
     pkg-def-extras = pkgdef-extras;
     src = src-driver { inherit pkgs; };
-    cabal-install = bot_args.cabal-install or null;
+    #cabal-install = bot_args.cabal-install or null;
     extra-hackage-tarballs = (checkHackageOverlays {} hackage-driver.extra-hackage-tarballs) // hackage-extra-tarballs;
     extra-hackages = (checkHackageOverlays [] hackage-driver.extra-hackages) ++ extra-hackages;
 
     modules = [
-      { packages."${name}".components = extraSrcFiles; }
       # Setup the saving part of splices unconditionally
       ({ config, lib, ... }: {
         config.preBuild = ''
@@ -110,6 +109,8 @@ pkgs.lib.makeExtensible (self: let
           export EXTERNAL_SPLICES_SAVE="$out/lib/haskell.nix/$pname"
         '';
       })
+    ] ++ pkgs.lib.optionals (extraSrcFiles != {}) [
+      { packages."${name}".components = extraSrcFiles; }
     ] ++ overrides ++ hackage-driver.package-overlays ++ inputMapDriver.overrides;
   });
 in baseProject.extend (foldExtensions ([
@@ -312,29 +313,34 @@ in baseProject.extend (foldExtensions ([
         });
         overrides = [
           # Easier override for users to set extra files from the package src to be included in build
-          { packages.${name}.components = extraSrcFiles; }
+          ({config, lib, ... }: { packages = lib.optionalAttrs (config.packages ? "${name}") {
+              ${name}.components = extraSrcFiles;
+            };
+          })
 
           # Move this later, not hacky but should be in android configs specifically, due to some linker args
           # and how we combine this with gradle
           ({ config, lib, pkgs, ... }: {
-            packages.${name} = {
-              components.exes = lib.optionalAttrs (pkgs.stdenv.targetPlatform.isAndroid) {
-                "${name}" = {
-                  ghcOptions = [
-                    "-shared"
-                    "-fPIC"
-                    "-threaded"
-                    "-no-hs-main"
-                    "-lHSrts_thr"
-                    "-lffi"
-                    "-lm"
-                    "-llog"
-                  ];
-                  configureFlags = [
-                    "--ld-options=-shared"
-                    "--ld-options=-no-pie"
-                    "--ld-options=-Wl,--gc-sections,--version-script=${../exts/android/haskellActivity.version},-u,Java_systems_obsidian_HaskellActivity_haskellStartMain,-u,hs_main"
-                  ];
+            packages = lib.optionalAttrs (config.packages ? "${name}") {
+              ${name} = {
+                components.exes = lib.optionalAttrs (pkgs.stdenv.targetPlatform.isAndroid) {
+                  "${name}" = {
+                    ghcOptions = [
+                      "-shared"
+                      "-fPIC"
+                      "-threaded"
+                      "-no-hs-main"
+                      "-lHSrts_thr"
+                      "-lffi"
+                      "-lm"
+                      "-llog"
+                    ];
+                    configureFlags = [
+                      "--ld-options=-shared"
+                      "--ld-options=-no-pie"
+                      "--ld-options=-Wl,--gc-sections,--version-script=${../exts/android/haskellActivity.version},-u,Java_systems_obsidian_HaskellActivity_haskellStartMain,-u,hs_main"
+                    ];
+                  };
                 };
               };
             };

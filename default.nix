@@ -29,10 +29,18 @@ let
   deps = rec {
     imported = {
       nix-thunk = import ./dep/nix-thunk { pkgs = bootPkgs; };
-      haskell-nix = import ./dep/haskell.nix (haskellNixArgs // { pkgs = bootPkgs; });
+      haskell-nix = import (source."haskell.nix") (haskellNixArgs // { pkgs = bootPkgs; });
     };
 
-    source = imported.nix-thunk.mapSubdirectories imported.nix-thunk.thunkSource ./dep;
+    source = let
+      inner = imported.nix-thunk.mapSubdirectories imported.nix-thunk.thunkSource ./dep;
+    in inner // {
+      "haskell.nix" = bootPkgs.applyPatches {
+        name = "haskell-nix";
+        src = inner."haskell.nix";
+        patches = [ ./dep/patches/haskell-nix.patch ];
+      };
+    };
   };
 
   # Setup our special overlays and config
