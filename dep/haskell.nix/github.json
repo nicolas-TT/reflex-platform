@@ -3,6 +3,6 @@
   "repo": "haskell.nix",
   "branch": "master",
   "private": false,
-  "rev": "351c0e12fcb0d201a32b0e8dca15a815cc9be9dc",
-  "sha256": "171ii4dlbacicy5fqf63ynlfljjphzlzjga5bdggrl04r8jczdrj"
+  "rev": "d3e91db1ce5b41f9c9a012f7304a62a8dc98dce7",
+  "sha256": "0gi5d9fp81akgyq9mz2hfk1fd675f5i0cbrp8r1bp0vzd32ffmca"
 }
