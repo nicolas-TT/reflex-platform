@@ -1,8 +1,8 @@
 {
   "owner": "nixos",
   "repo": "nixpkgs",
-  "branch": "haskell-updates",
+  "branch": "nixos-unstable",
   "private": false,
-  "rev": "9bd652c4305d1f6b6b59451036fd0a44a13f78d5",
-  "sha256": "0prw6ixmcw92khcijdi20h2bckfx6jz7i3asw3d8d59ybdniljqd"
+  "rev": "50a96edd8d0db6cc8db57dab6bb6d6ee1f3dc49a",
+  "sha256": "0jg5zksa5rrfzaf0xp1ilhd55k0v0z5kkbxq5amml6mqy8ac7d33"
 }

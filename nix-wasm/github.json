@@ -3,6 +3,6 @@
   "repo": "nix-wasm",
   "branch": "main",
   "private": false,
-  "rev": "26d1e3545b6ce98de219747ae0ab63959399c3b5",
-  "sha256": "0a07a71nwpj65smw6ihgwq7ydb80xwcy4ga8w2s7s12wpr9m1apf"
+  "rev": "5be8304222c7d61305c668600be9156165c6e2b3",
+  "sha256": "14jvq1cvnhigciq0fy3nhnl81j7lanibsmkljlbqkx1jd0cl0mnz"
 }

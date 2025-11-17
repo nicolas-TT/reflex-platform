@@ -247,8 +247,8 @@ let iosSupport = system == "x86_64-darwin";
       ghcjs = nixpkgsFunc (nixpkgsArgs // {
         crossSystem = lib.systems.examples.ghcjs;
       });
-      wasm = (import ./nix-wasm).legacyPackages.${nixpkgs.system};
-      
+      wasm = (import ./nix-wasm { inherit system; }).legacyPackages.${system};
+
     };
 
     haskellLib = nixpkgs.haskell.lib;
