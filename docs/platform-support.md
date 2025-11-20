@@ -15,7 +15,9 @@ Depending on the build system you are using, you can build for the following tar
 * Android builds aren't yet supported from macOS.
 * When building a desktop app on x86_64-linux you can use webkitgtk, but that isn't yet supported on aarch64-linux. You can, however, build your backend executable and warp-based frontend executables on either architecture.
 * When building a desktop app on macOS you can use wkwebview or warp.
-* 32-bit Android builds are no longer supported due to the removal of GHC 8.6 support.
+* 32-bit Android builds are no longer supported.
+* The default GHC version is now 9.12. GHC 8.6 and 8.10 are no longer supported.
+* Cross-compilation (Android, iOS) uses Template Haskell splices to handle TH code that cannot run on the host platform.
 
 ## Binary Caches
 

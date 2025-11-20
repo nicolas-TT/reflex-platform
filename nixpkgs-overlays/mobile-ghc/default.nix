@@ -15,7 +15,7 @@ in self: super: {
         lib.optionals isAndroid [
           ./8.6.y/android-patches/force-relocation.patch
         ];
-    })) { inherit (super.haskell.compiler) ghc8107 ghcSplices-8_10; };
+    })) { inherit (super.haskell.compiler) ghc912; };
   };
 }
 

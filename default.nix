@@ -26,34 +26,26 @@ let iosSupport = system == "x86_64-darwin";
     }.${iosSdkVersion} or (throw "Unknown iosSdkVersion: ${iosSdkVersion}");
 
     # Overlay for GHC which supports the external splices plugin
+    # This is needed for Template Haskell during cross-compilation
     splicesEval = self: super: {
       haskell = super.haskell // {
         compiler = super.haskell.compiler // {
-          ghcSplices-8_10 = (super.haskell.compiler.ghc8107.override {
-            # New option for GHC 8.10. Explicitly enable profiling builds
+          ghcSplices-9_12 = (super.haskell.compiler.ghc912.override {
             enableProfiledLibs = true;
-            #enableShared = self.stdenv.hostPlatform == self.stdenv.targetPlatform;
-            #enableShared = false;
-            bootPkgs = if (super.stdenv.hostPlatform.isAarch64) then (super.haskell.packages.ghc8107Binary // {
-              happy = super.haskell.packages.ghc8107Binary.happy_1_19_12;
+            bootPkgs = if (super.stdenv.hostPlatform.isAarch64) then (super.haskell.packages.ghc910Binary // {
+              happy = super.haskell.packages.ghc910Binary.happy_1_19_12;
             }) else
-            (super.haskell.packages.ghc865Binary // { happy = super.haskell.packages.ghc865Binary.happy_1_19_12; });
+            (super.haskell.packages.ghc910Binary // { happy = super.haskell.packages.ghc910Binary.happy_1_19_12; });
           }).overrideAttrs (drv: {
-            src = nixpkgs.hackGet ./haskell-overlays/splices-load-save/dep/ghc-8.10;
-            # When building from the ghc git repo, ./boot must be run before configuring, whereas
-            # in the distribution tarball on the haskell.org downloads page, ./boot has already been
-            # run.
-            prePatch = ''
-              echo ${drv.version} >VERSION
-              patchShebangs boot
-              ./boot
-            '' + drv.preConfigure or "";
+            # For now, use the standard GHC 9.12 from nixpkgs
+            # If we need a custom build with splices, we'll add it to splices-load-save/dep/ghc-9.12
+            # src = nixpkgs.hackGet ./haskell-overlays/splices-load-save/dep/ghc-9.12;
           });
         };
         packages = super.haskell.packages // {
-          ghcSplices-8_10 = super.haskell.packages.ghc8107.override {
-            buildHaskellPackages = self.buildPackages.haskell.packages.ghcSplices-8_10;
-            ghc = self.buildPackages.haskell.compiler.ghcSplices-8_10;
+          ghcSplices-9_12 = super.haskell.packages.ghc912.override {
+            buildHaskellPackages = self.buildPackages.haskell.packages.ghcSplices-9_12;
+            ghc = self.buildPackages.haskell.compiler.ghcSplices-9_12;
           };
         };
       };
@@ -74,7 +66,7 @@ let iosSupport = system == "x86_64-darwin";
             haskellOverlaysPre
             haskellOverlaysPost
             useWebkit2Gtk;
-          inherit ghcSavedSplices-8_10;
+          inherit ghcSavedSplices-9_12;
         };
       };
     };
@@ -156,7 +148,7 @@ let iosSupport = system == "x86_64-darwin";
     inherit (nixpkgs) lib fetchurl fetchgit fetchgitPrivate fetchFromGitHub fetchFromBitbucket;
 
     wasmCross = nixpkgs.hackGet ./wasm-cross;
-    webGhcSrc = (import (wasmCross + /webghc.nix) { inherit fetchgit; }).ghc8107SplicesSrc;
+    # GHC 9.12+ has native TH support for WASM, no need for splices
     nixpkgsCross = {
       # NOTE(Dylan Green):
       # sdkVer 30 is the minimum for android, else we have to use libffi 3.3
@@ -237,28 +229,21 @@ let iosSupport = system == "x86_64-darwin";
       override = new: makeRecursivelyOverridable (x.override (old: (combineOverrides old new)));
     };
 
-  ghcSavedSplices = ghcSavedSplices-8_10;
-  ghcSavedSplices-8_10 = (makeRecursivelyOverridable nixpkgs.haskell.packages.integer-simple.ghcSplices-8_10).override {
+  ghcSavedSplices = ghcSavedSplices-9_12;
+  ghcSavedSplices-9_12 = (makeRecursivelyOverridable nixpkgs.haskell.packages.ghcSplices-9_12).override {
     overrides = lib.foldr lib.composeExtensions (_: _: {}) (let
       haskellOverlays = nixpkgs.haskell.overlays;
     in [
       haskellOverlays.combined
-      (haskellOverlays.saveSplices "8.10")
+      (haskellOverlays.saveSplices "9.12")
       (self: super: with haskellLib; {
-        blaze-textual = enableCabalFlag super.blaze-textual "integer-simple";
-        cryptonite = disableCabalFlag super.cryptonite "integer-gmp";
-        integer-logarithms = disableCabalFlag super.integer-logarithms "integer-gmp";
-        scientific = enableCabalFlag super.scientific "integer-simple";
+        # GHC 9.x uses native-bignum by default, no need for integer-simple flags
       })
     ]);
   };
   ghcjs = ghcjs9_12;
   ghcjs9_12 = (makeRecursivelyOverridable nixpkgs.pkgsCross.ghcjs.haskell.packages.ghc912).override {
     overrides = nixpkgs.haskell.overlays.combined;
-  };
-
-  ghcjs8_10 = (makeRecursivelyOverridable nixpkgsCross.ghcjs.haskell.packages.ghcjs810).override {
-    overrides = nixpkgsCross.ghcjs.haskell.overlays.combined;
   };
 
   ghcwasm = ghcwasm9_12;
@@ -271,9 +256,6 @@ let iosSupport = system == "x86_64-darwin";
     overrides = nixpkgs.haskell.overlays.combined;
   };
   ghcHEAD = (makeRecursivelyOverridable nixpkgs.haskell.packages.ghcHEAD).override {
-    overrides = nixpkgs.haskell.overlays.combined;
-  };
-  ghc8_10 = (makeRecursivelyOverridable nixpkgs.haskell.packages.ghc8107).override {
     overrides = nixpkgs.haskell.overlays.combined;
   };
 
@@ -291,24 +273,24 @@ let iosSupport = system == "x86_64-darwin";
         new));
   };
 
-  ghcAndroidAarch64 = ghcAndroidAarch64-8_10;
-  ghcAndroidAarch64-8_10 = makeRecursivelyOverridableBHPToo ((makeRecursivelyOverridable nixpkgsCross.android.aarch64.haskell.packages.integer-simple.ghcSplices-8_10).override {
+  ghcAndroidAarch64 = ghcAndroidAarch64-9_12;
+  ghcAndroidAarch64-9_12 = makeRecursivelyOverridableBHPToo ((makeRecursivelyOverridable nixpkgsCross.android.aarch64.haskell.packages.ghcSplices-9_12).override {
     overrides = nixpkgsCross.android.aarch64.haskell.overlays.combined;
   });
-  ghcAndroidAarch32 = ghcAndroidAarch32-8_10;
-  ghcAndroidAarch32-8_10 = makeRecursivelyOverridableBHPToo ((makeRecursivelyOverridable nixpkgsCross.android.aarch32.haskell.packages.integer-simple.ghcSplices-8_10).override {
+  ghcAndroidAarch32 = ghcAndroidAarch32-9_12;
+  ghcAndroidAarch32-9_12 = makeRecursivelyOverridableBHPToo ((makeRecursivelyOverridable nixpkgsCross.android.aarch32.haskell.packages.ghcSplices-9_12).override {
     overrides = nixpkgsCross.android.aarch32.haskell.overlays.combined;
   });
-  ghcIosSimulator64-8_10 = makeRecursivelyOverridableBHPToo ((makeRecursivelyOverridable nixpkgsCross.ios.simulator64.haskell.packages.integer-simple.ghcSplices-8_10).override {
+  ghcIosSimulator64-9_12 = makeRecursivelyOverridableBHPToo ((makeRecursivelyOverridable nixpkgsCross.ios.simulator64.haskell.packages.ghcSplices-9_12).override {
     overrides = nixpkgsCross.ios.simulator64.haskell.overlays.combined;
   });
-  ghcIosSimulator64 = ghcIosSimulator64-8_10;
-  ghcIosAarch64 = ghcIosAarch64-8_10;
-  ghcIosAarch64-8_10 = makeRecursivelyOverridableBHPToo ((makeRecursivelyOverridable nixpkgsCross.ios.aarch64.haskell.packages.integer-simple.ghcSplices-8_10).override {
+  ghcIosSimulator64 = ghcIosSimulator64-9_12;
+  ghcIosAarch64 = ghcIosAarch64-9_12;
+  ghcIosAarch64-9_12 = makeRecursivelyOverridableBHPToo ((makeRecursivelyOverridable nixpkgsCross.ios.aarch64.haskell.packages.ghcSplices-9_12).override {
     overrides = nixpkgsCross.ios.aarch64.haskell.overlays.combined;
   });
-  ghcIosAarch32 = ghcIosAarch32-8_10;
-  ghcIosAarch32-8_10 = makeRecursivelyOverridableBHPToo ((makeRecursivelyOverridable nixpkgsCross.ios.aarch32.haskell.packages.integer-simple.ghcSplices-8_10).override {
+  ghcIosAarch32 = ghcIosAarch32-9_12;
+  ghcIosAarch32-9_12 = makeRecursivelyOverridableBHPToo ((makeRecursivelyOverridable nixpkgsCross.ios.aarch32.haskell.packages.ghcSplices-9_12).override {
     overrides = nixpkgsCross.ios.aarch32.haskell.overlays.combined;
   });
 
@@ -317,18 +299,12 @@ let iosSupport = system == "x86_64-darwin";
   android = androidWithHaskellPackages {
     inherit ghcAndroidAarch64 ghcAndroidAarch32;
   };
-  android-8_10 = androidWithHaskellPackages {
-    ghcAndroidAarch64 = ghcAndroidAarch64-8_10;
-    ghcAndroidAarch32 = ghcAndroidAarch32-8_10;
-  };
   androidWithHaskellPackages = { ghcAndroidAarch64, ghcAndroidAarch32 }: import ./android {
     inherit nixpkgs nixpkgsCross ghcAndroidAarch64 ghcAndroidAarch32 overrideCabal;
     acceptAndroidSdkLicenses = config.android_sdk.accept_license or false;
   };
   iosAarch64 = iosWithHaskellPackages ghcIosAarch64;
-  iosAarch64-8_10 = iosWithHaskellPackages ghcIosAarch64-8_10;
   iosAarch32 = iosWithHaskellPackages ghcIosAarch32;
-  iosAarch32-8_10 = iosWithHaskellPackages ghcIosAarch32-8_10;
   iosSimulator = {
     buildApp = nixpkgs.lib.makeOverridable (import ./ios { inherit nixpkgs; ghc = ghcIosSimulator64; withSimulator = true; });
   };
@@ -347,21 +323,12 @@ in let this = rec {
           overrideCabal
           ghc
           ghcHEAD
-          ghc8_10
           ghcIosSimulator64
-          ghcIosSimulator64-8_10
           ghcIosAarch64
-          ghcIosAarch64-8_10
           ghcIosAarch32
-          ghcIosAarch32-8_10
           ghcAndroidAarch64
-          ghcAndroidAarch64-8_10
           ghcAndroidAarch32
-          ghcAndroidAarch32-8_10
           ghcjs
-          ghcjs8_10
-          ghcSavedSplices
-          ghcSavedSplices-8_10
           android
           androidWithHaskellPackages
           iosAarch32
@@ -383,23 +350,11 @@ in let this = rec {
     applicationId = "org.reflexfrp.todomvc";
     displayName = "Reflex TodoMVC";
   };
-  androidReflexTodomvc-8_10 = android-8_10.buildApp {
-    package = p: p.reflex-todomvc;
-    executableName = "reflex-todomvc";
-    applicationId = "org.reflexfrp.todomvc.via_8_10";
-    displayName = "Reflex TodoMVC via GHC 8.10";
-  };
   iosReflexTodomvc = ios.buildApp {
     package = p: p.reflex-todomvc;
     executableName = "reflex-todomvc";
     bundleIdentifier = "org.reflexfrp.todomvc";
     bundleName = "Reflex TodoMVC";
-  };
-  iosReflexTodomvc-8_10 = iosAarch64-8_10.buildApp {
-    package = p: p.reflex-todomvc;
-    executableName = "reflex-todomvc";
-    bundleIdentifier = "org.reflexfrp.todomvc.via_8_10";
-    bundleName = "Reflex TodoMVC via GHC 8.10";
   };
   iosSimulatorReflexTodomvc = iosSimulator.buildApp {
     package = p: p.reflex-todomvc;
@@ -504,11 +459,11 @@ in let this = rec {
 
   cachePackages =
     let otherPlatforms = lib.optionals androidSupport [
-          (if __useNewerCompiler then "ghcAndroidAarch64-8_10" else "ghcAndroidAarch64")
-          (if __useNewerCompiler then "ghcAndroidAarch32-8_10" else "ghcAndroidAarch32")
+          "ghcAndroidAarch64"
+          "ghcAndroidAarch32"
         ] ++ lib.optionals iosSupport [
-          (if __useNewerCompiler then "ghcIosAarch64-8_10" else "ghcIosAarch64")
-          (if __useNewerCompiler then "ghcIosSimulator64-8_10" else "ghcIosSimulator64")
+          "ghcIosAarch64"
+          "ghcIosSimulator64"
         ];
     in tryReflexPackages
       ++ builtins.map reflexEnv otherPlatforms
