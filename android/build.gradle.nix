@@ -45,7 +45,6 @@ apply plugin: 'com.android.application'
 
 android {
     compileSdkVersion 30
-    buildToolsVersion '30.0.2'
 
     lintOptions {
       checkReleaseBuilds false
@@ -70,7 +69,7 @@ android {
     defaultConfig {
         applicationId "${applicationId}"
         minSdkVersion 21
-        targetSdkVersion 34
+        targetSdkVersion 35
         versionCode ${version.code}
         versionName "${version.name}"
         multiDexEnabled false
