@@ -51,14 +51,14 @@ let iosSupport = system == "x86_64-darwin";
             bootPkgs = super.haskell.packages.ghc865Binary // {
               happy = super.haskell.packages.ghc865Binary.happy_1_19_12;
             };
-            useLdGold = !(self.stdenv.targetPlatform.isAarch32) && self.stdenv.hostPlatform.useAndroidPrebuilt;
+            useLdGold = !(super.stdenv.targetPlatform.isAarch32) && super.stdenv.hostPlatform.useAndroidPrebuilt;
             enableDocs = false;
             enableHaddockProgram = false;
           };
           ghcSplices-8_10 = (super.haskell.compiler.ghc8107.override {
             # New option for GHC 8.10. Explicitly enable profiling builds
             enableProfiledLibs = true;
-            #enableShared = self.stdenv.hostPlatform == self.stdenv.targetPlatform;
+            #enableShared = super.stdenv.hostPlatform == super.stdenv.targetPlatform;
             #enableShared = false;
             bootPkgs = if (super.stdenv.hostPlatform.isAarch64) then (super.haskell.packages.ghc8107Binary // {
               happy = super.haskell.packages.ghc8107Binary.happy_1_19_12;
@@ -112,13 +112,13 @@ let iosSupport = system == "x86_64-darwin";
     forceStaticLibs = self: super: {
       darwin = super.darwin // {
         libiconv = super.darwin.libiconv.overrideAttrs (_:
-          lib.optionalAttrs (self.stdenv.hostPlatform != self.stdenv.buildPlatform) {
+          lib.optionalAttrs (super.stdenv.hostPlatform != super.stdenv.buildPlatform) {
             postInstall = "rm $out/include/libcharset.h $out/include/localcharset.h";
             configureFlags = ["--enable-shared" "--enable-static"];
           });
         };
       #zlib = super.zlib.override (lib.optionalAttrs
-      #  (self.stdenv.hostPlatform != self.stdenv.buildPlatform)
+      #  (super.stdenv.hostPlatform != super.stdenv.buildPlatform)
       #  { static = true; shared = true; });
       };
 
@@ -135,7 +135,7 @@ let iosSupport = system == "x86_64-darwin";
         #allCabalHashesOverlay
         (self: super: {
 
-          runtimeShellPackage = if (self.stdenv.hostPlatform.isGhcjs || self.stdenv.targetPlatform.isiOS)
+          runtimeShellPackage = if (super.stdenv.hostPlatform.isGhcjs || super.stdenv.targetPlatform.isiOS)
             then super.buildPackages.runtimeShellPackage
             else super.runtimeShellPackage;
 
@@ -161,13 +161,13 @@ let iosSupport = system == "x86_64-darwin";
             gtkSupport = false;
           };
 
-          sqlite = super.sqlite.overrideAttrs (old: lib.optionalAttrs (self.stdenv.hostPlatform.useAndroidPrebuilt or false) {
+          sqlite = super.sqlite.overrideAttrs (old: lib.optionalAttrs (super.stdenv.hostPlatform.useAndroidPrebuilt or false) {
             postBuild = ''
               mkdir -p $debug
             '';
           });
 
-          libffi = if (self.stdenv.hostPlatform.useAndroidPrebuilt or false) then super.libffi_3_3 else super.libffi;
+          libffi = if (super.stdenv.hostPlatform.useAndroidPrebuilt or false) then super.libffi_3_3 else super.libffi;
         })
       ] ++ nixpkgsOverlays;
       config = config // {
